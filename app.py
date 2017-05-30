@@ -28,7 +28,10 @@ machine = TocMachine(
         'user',
         'state1',
         'photo',
-        'send_photo',
+        'photo_beauty',
+        'photo_beauty_candice',
+        'photo_beauty_deer',
+        'photo_hell',
         'leave_photo',
         'state3',
         'ooxx',
@@ -51,12 +54,33 @@ machine = TocMachine(
         {
             'trigger': 'advance',
             'source': 'photo',
-            'dest': 'send_photo',
-            'conditions': 'is_going_to_send_photo'
+            'dest': 'photo_beauty',
+            'conditions': 'is_going_to_photo_beauty'
         },
         {
             'trigger': 'advance',
             'source': 'photo',
+            'dest': 'photo_hell',
+            'conditions': 'is_going_to_photo_hell'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'photo_beauty',
+            'dest': 'photo_beauty_candice',
+            'conditions': 'is_going_to_photo_beauty_candice'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'photo_beauty',
+            'dest': 'photo_beauty_deer',
+            'conditions': 'is_going_to_photo_beauty_deer'
+        },
+        {
+            'trigger': 'advance',
+            'source': [
+                'photo',
+                'photo_beauty'
+            ],
             'dest': 'leave_photo',
             'conditions': 'is_going_to_leave_photo'
         },
@@ -93,7 +117,9 @@ machine = TocMachine(
             'source': [
                 'state1',
                 'leave_photo',
-                'send_photo',
+                'photo_beauty_candice',
+                'photo_beauty_deer',
+                'photo_hell',
                 'state3',
                 'state5'
             ],

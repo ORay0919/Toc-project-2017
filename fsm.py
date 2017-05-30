@@ -140,12 +140,33 @@ class TocMachine(GraphMachine):
             return False
         return text.lower() == 'photo'
 
-    def is_going_to_send_photo(self, update):
+    def is_going_to_photo_beauty(self, update):
         if hasattr(update.message ,'text'):
             text = update.message.text
         else:
             return False
         return text.lower() == '1'
+
+    def is_going_to_photo_hell(self, update):
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+        return text.lower() == '2'
+
+    def is_going_to_photo_beauty_candice(self, update):
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+        return text.lower() == '1'
+
+    def is_going_to_photo_beauty_deer(self, update):
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+        return text.lower() == '2'
 
     def is_going_to_leave_photo(self, update):
         if hasattr(update.message ,'text'):
@@ -159,7 +180,7 @@ class TocMachine(GraphMachine):
             text = update.message.text
         else:
             return False
-        return text.lower() == 's3'
+        return text.lower() == '3'
 
     def is_going_to_ooxx(self, update):
         global OX
@@ -205,28 +226,54 @@ class TocMachine(GraphMachine):
 
 #######################################################################
     def on_enter_photo(self, update):
-        global id_chat
         
-        update.message.reply_text("Which kind of photo do you want?\nPlease type the number :\n1 : Beauty\n2 : 長輩圖\n3 : Leave photo")
-        #self.go_back(update)
+        update.message.reply_text("Which kind of photo do you want?\nPlease type the number :\n1 : Beauty\n2 : 通往地獄的大門\n3 : Leave photo")
 
     def on_exit_photo(self, update):
-        print('Leaving photo')
+        print('Leavephoto')
+
 #######################################################################
-    def on_enter_send_photo(self, update):
+    def on_enter_photo_beauty(self, update):
+
+        update.message.reply_text("Whose photo do you want?\nPlease type the number :\n1 : Candice\n2 : Deer\n3 : Leave photo")
+         
+
+    def on_exit_photo_beauty(self, update):
+        print('Leaving beauty')
+
+#######################################################################
+    def on_enter_photo_beauty_candice(self, update):
         global id_chat
-        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/1.jpg', 'rb'))
-        #update.message.reply_text("I'm entering state1")
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/beauty/candice/1.jpg', 'rb'))
         self.go_back(update)
 
-    def on_exit_photo(self, update):
-        print('Leaving send photo')
+    def on_exit_photo_beauty_candice(self, update):
+        print('Leaving Candice')
+
+#######################################################################
+    def on_enter_photo_beauty_deer(self, update):
+        global id_chat
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/beauty/deer/1.jpg', 'rb'))
+        self.go_back(update)
+
+    def on_exit_photo_beauty_deer(self, update):
+        print('Leaving Deer')
+
+#######################################################################
+    def on_enter_photo_hell(self, update):
+        global id_chat
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/hell/1.jpg', 'rb'))
+        self.go_back(update)
+        
+    def on_exit_photo_hell(self, update):
+        print('Leaving Hell')
+
 #######################################################################
     def on_enter_leave_photo(self, update):
         update.message.reply_text("Leave photo")
         self.go_back(update)
 
-    def on_leave_photo(self, update):
+    def on_exit_leave_photo(self, update):
         print('Leaving photo')
 
 #######################################################################
