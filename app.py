@@ -27,7 +27,9 @@ machine = TocMachine(
     states=[
         'user',
         'state1',
-        'state2',
+        'photo',
+        'send_photo',
+        'leave_photo',
         'state3',
         'ooxx',
         'state4',
@@ -43,8 +45,20 @@ machine = TocMachine(
         {
             'trigger': 'advance',
             'source': 'user',
-            'dest': 'state2',
-            'conditions': 'is_going_to_state2'
+            'dest': 'photo',
+            'conditions': 'is_going_to_photo'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'photo',
+            'dest': 'send_photo',
+            'conditions': 'is_going_to_send_photo'
+        },
+        {
+            'trigger': 'advance',
+            'source': 'photo',
+            'dest': 'leave_photo',
+            'conditions': 'is_going_to_leave_photo'
         },
         {
             'trigger': 'advance',
@@ -78,7 +92,8 @@ machine = TocMachine(
             'trigger': 'go_back',
             'source': [
                 'state1',
-                'state2',
+                'leave_photo',
+                'send_photo',
                 'state3',
                 'state5'
             ],
@@ -129,11 +144,11 @@ def button(bot, update):
     if fsm.OX == 1 :
 
         query = update.callback_query
-
+        fsm.id_message = query.message.message_id
         v = int(query.data)
         j = int(v%3)
         i = int((v-j)/3)
-
+        
         op = fsm.ooxx_push(i ,j ,1)
      
         reply_markup = get_keyboard()

@@ -8,6 +8,7 @@ from telegram.ext import  CommandHandler, CallbackQueryHandler
 puzzle  = [['_' for x in range(3)] for y in range(3)] 
 OX = 0
 id_chat = 0
+id_message = 0
 
 def ooxx_end() :
     global OX
@@ -132,19 +133,33 @@ class TocMachine(GraphMachine):
             return False
         return text.lower() == '1'
 
-    def is_going_to_state2(self, update):
+    def is_going_to_photo(self, update):
         if hasattr(update.message ,'text'):
             text = update.message.text
         else:
             return False
-        return text.lower() == '2'
+        return text.lower() == 'photo'
+
+    def is_going_to_send_photo(self, update):
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+        return text.lower() == '1'
+
+    def is_going_to_leave_photo(self, update):
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+        return text.lower() == '3'
 
     def is_going_to_state3(self, update):
         if hasattr(update.message ,'text'):
             text = update.message.text
         else:
             return False
-        return text.lower() == '3'
+        return text.lower() == 's3'
 
     def is_going_to_ooxx(self, update):
         global OX
@@ -170,7 +185,7 @@ class TocMachine(GraphMachine):
         else:
             return False
 
-        return text.lower() == "exit"
+        return False
     
     def is_going_to_state5(self, update):
         if hasattr(update.message ,'text'):
@@ -189,14 +204,30 @@ class TocMachine(GraphMachine):
 
 
 #######################################################################
-    def on_enter_state2(self, update):
+    def on_enter_photo(self, update):
+        global id_chat
+        
+        update.message.reply_text("Which kind of photo do you want?\nPlease type the number :\n1 : Beauty\n2 : 長輩圖\n3 : Leave photo")
+        #self.go_back(update)
+
+    def on_exit_photo(self, update):
+        print('Leaving photo')
+#######################################################################
+    def on_enter_send_photo(self, update):
         global id_chat
         __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/1.jpg', 'rb'))
         #update.message.reply_text("I'm entering state1")
         self.go_back(update)
 
-    def on_exit_state2(self, update):
-        print('Leaving state2')
+    def on_exit_photo(self, update):
+        print('Leaving send photo')
+#######################################################################
+    def on_enter_leave_photo(self, update):
+        update.message.reply_text("Leave photo")
+        self.go_back(update)
+
+    def on_leave_photo(self, update):
+        print('Leaving photo')
 
 #######################################################################
     def on_enter_state3(self, update):
@@ -211,9 +242,9 @@ class TocMachine(GraphMachine):
     def on_enter_ooxx(self, update):
         global puzzle
         global OX 
-        OX = 1
         
-        if OX == 1 :
+        if OX != 1:
+            OX = 1
             puzzle  = [['_' for x in range(3)] for y in range(3)] 
             puzzle =[['X','O','O'],['O','X','X'],['X','_','O']]
             keyboard = []
