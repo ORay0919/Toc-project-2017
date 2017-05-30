@@ -1,5 +1,6 @@
 import time
 import __main__
+import random
 
 from transitions.extensions import GraphMachine
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -244,7 +245,9 @@ class TocMachine(GraphMachine):
 #######################################################################
     def on_enter_photo_beauty_candice(self, update):
         global id_chat
-        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/beauty/candice/1.jpg', 'rb'))
+        n = random.randint(1 ,3)
+        url = './pic/beauty/candice/%s.jpg'%str(n)
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open(url, 'rb'))
         self.go_back(update)
 
     def on_exit_photo_beauty_candice(self, update):
@@ -253,7 +256,9 @@ class TocMachine(GraphMachine):
 #######################################################################
     def on_enter_photo_beauty_deer(self, update):
         global id_chat
-        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/beauty/deer/1.jpg', 'rb'))
+        n = random.randint(1 ,3)
+        url = './pic/beauty/deer/%s.jpg'%str(n)
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open(url, 'rb'))
         self.go_back(update)
 
     def on_exit_photo_beauty_deer(self, update):
@@ -262,7 +267,9 @@ class TocMachine(GraphMachine):
 #######################################################################
     def on_enter_photo_hell(self, update):
         global id_chat
-        __main__.bot.send_photo(chat_id= id_chat ,photo=open('./pic/hell/1.jpg', 'rb'))
+        n = random.randint(1 ,12)
+        url = './pic/hell/%s.jpg'%str(n)
+        __main__.bot.send_photo(chat_id= id_chat ,photo=open(url, 'rb'))
         self.go_back(update)
         
     def on_exit_photo_hell(self, update):

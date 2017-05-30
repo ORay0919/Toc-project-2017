@@ -14,7 +14,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 API_TOKEN = '375506753:AAGeRZuDa89KhOrWWopmBWk6RE9IS-3nG4g'
-WEBHOOK_URL = 'https://7d2309af.ngrok.io/hook'
+WEBHOOK_URL = 'https://8e591ff1.ngrok.io/hook'
 
 app = Flask(__name__)
 bot = telegram.Bot(token=API_TOKEN)
