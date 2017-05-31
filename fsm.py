@@ -7,9 +7,13 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import  CommandHandler, CallbackQueryHandler
  
 puzzle  = [['_' for x in range(3)] for y in range(3)] 
+bmi_state = 0
+bmi_get_weight = 0.0
+bmi_get_height = 0.0
 OX = 0
 id_chat = 0
 id_message = 0
+intro = 'There are four commands so far.\n(1) photo : to get some photo\n(2) ooxx : play tic-tac-toe with bot\n(3) soon\n(4) 3 : don\'t doubt it it\'s 3 but just for test only'
 
 def ooxx_end() :
     global OX
@@ -127,12 +131,74 @@ class TocMachine(GraphMachine):
 
 
 #######################################################################
-    def is_going_to_state1(self, update):
+    def is_going_to_bmi(self, update):
         if hasattr(update.message ,'text'):
             text = update.message.text
         else:
             return False
-        return text.lower() == '1'
+        return text.lower() == 'bmi'
+
+    def is_going_to_bmi_height(self, update):
+        global bmi_state
+        global bmi_get_weight
+
+        if bmi_state == -1 :
+            try:
+                bmi_get_weight = float(update.message.text)
+                if bmi_get_weight == 0:
+                    bmi_state = -1
+                    return False
+                bmi_state = 1
+                return True
+            except ValueError:
+                bmi_state = -1
+
+        elif bmi_state == 1:
+            try:
+                bmi_get_weight = float(update.message.text)
+                if bmi_get_weight == 0:
+                    bmi_state = -1
+                    return False
+                return True
+            except ValueError:
+                bmi_state = -1
+            
+        return False
+
+    def is_going_to_bmi_show(self, update):
+        global bmi_state
+        global bmi_get_height
+
+        if bmi_state == -2 :
+            try:
+                bmi_get_height = float(update.message.text)
+                if bmi_get_height == 0:
+                    bmi_state = -2
+                    return False
+                bmi_state = 2
+                return True
+            except ValueError:
+                bmi_state = -2
+
+        elif bmi_state == 2:
+            try:
+                bmi_get_height = float(update.message.text)
+                if bmi_get_height == 0:
+                    bmi_state = -2
+                    return False
+                return True
+            except ValueError:
+                bmi_state = -2
+
+        return False
+
+    def is_going_to_bmi_error(self, update):
+        global bmi_state
+
+        if bmi_state == -2 or bmi_state == -1:
+            return True
+            
+        return False
 
     def is_going_to_photo(self, update):
         if hasattr(update.message ,'text'):
@@ -210,20 +276,83 @@ class TocMachine(GraphMachine):
         return False
     
     def is_going_to_state5(self, update):
+        global OX
+
         if hasattr(update.message ,'text'):
             text = update.message.text
         else:
             return False
-        return text.lower() == "n"
+        if OX == 1:
+            return text.lower() == "exit"
+        elif OX == 2:
+            return text.lower() == "n"
 
 #######################################################################
-    def on_enter_state1(self, update):
-        update.message.reply_text("I'm entering state1")
+    def on_enter_bmi(self, update):
+        global bmi_state
+        update.message.reply_text("Please give me your \" Weight \" in kilograms ")
+        bmi_state = 1;
+        #self.go_back(update)
+
+    def on_exit_bmi(self, update):
+        print('Leaving weight')
+
+#######################################################################
+    def on_enter_bmi_height(self, update):
+        global bmi_state
+        update.message.reply_text("Please give me your \" Height \" in centimeters ")
+        bmi_state = 2;
+        #self.go_back(update)
+
+    def on_exit_bmi_height(self, update):
+        print('Leaving height')
+
+#######################################################################
+    def on_enter_bmi_show(self, update):
+        global bmi_state
+        global bmi_get_height
+        global bmi_get_weight
+        b = bmi_get_weight / ((bmi_get_height/100)**2)
+        
+        if b < 16.5 or b > 31.5 :
+            n = '(免役體位)'
+        elif ( 16.5 <= b and b <17)  or ( 31 < b and b <= 31.5 ) :
+            n = '(替代役體位)'
+        else :
+            n ='(常備役體位)'
+        text  = "Here is yuor BMI : \n%.2f     "%b+n+"\n\n體位- - - - - - - - BMI範圍 - - - - - - - - 身高相對體重\n\n"
+        k2 = ((bmi_get_height/100)**2)*16.5
+        text += "免役體位          BMI＜16.5               　＜%.2f\n"%k2
+        k1 = k2 
+        k2 = ((bmi_get_height/100)**2)*17.0
+        text += "替代役體位      16.5≦ BMI＜17       %-7.2f ~ %7.2f\n"%(k1 ,k2)
+        k1 = k2 
+        k2 = ((bmi_get_height/100)**2)*31
+        text += "常備役體位      17≦BMI≦31            %-7.2f ~ %7.2f\n"%(k1 ,k2)
+        k1 = k2 
+        k2 = ((bmi_get_height/100)**2)*31.5
+        text += "替代役體位      31＜BMI≦31.5        %-7.2f ~ %7.2f\n"%(k1 ,k2)
+        k1 = k2 
+        text += "免役體位          31.5＜BMI               　%.2f＜\n"%k1
+
+
+        update.message.reply_text(text)
+        
+        bmi_state = 0;
         self.go_back(update)
 
-    def on_exit_state1(self, update):
-        print('Leaving state1')
+    def on_exit_bmi_show(self, update):
+        print('Leaving bmi')
 
+#######################################################################
+    def on_enter_bmi_error(self, update):
+        if bmi_state == -1 :
+            update.message.reply_text("Wrong Input!\nPlease give me your \" Weight \" in kilograms \" AGAIN \"")
+        elif bmi_state == -2:
+            update.message.reply_text("Wrong Input!\nPlease give me your \" Height \" in centimeters \" AGAIN \"")
+
+    def on_exit_bmi_error(self, update):
+        print('Leaving bmi error')
 
 #######################################################################
     def on_enter_photo(self, update):
@@ -285,7 +414,9 @@ class TocMachine(GraphMachine):
 
 #######################################################################
     def on_enter_state3(self, update):
-        update.message.reply_text("I'm entering state3")
+        update.message.reply_text("I'm just here for test 😂")
+        
+        __main__.bot.send_sticker(chat_id= id_chat ,sticker = 'CAADAgADfgUAAvoLtghVynd3kd-TuAI')
         self.go_back(update)
 
     def on_exit_state3(self, update):
@@ -300,7 +431,7 @@ class TocMachine(GraphMachine):
         if OX != 1:
             OX = 1
             puzzle  = [['_' for x in range(3)] for y in range(3)] 
-            puzzle =[['X','O','O'],['O','X','X'],['X','_','O']]
+
             keyboard = []
             
             for x in range (0, 3):                     
@@ -311,7 +442,7 @@ class TocMachine(GraphMachine):
                 keyboard.append(new)  
             
             reply_markup = InlineKeyboardMarkup(keyboard)
-            __main__.bot.send_message(chat_id= id_chat,text='You go first:', reply_markup=reply_markup)
+            __main__.bot.send_message(chat_id= id_chat,text='You go first:\n\nType exit to leave the game', reply_markup=reply_markup)
             #self.go_back(update)
 
     def on_exit_ooxx(self, update):
@@ -331,13 +462,29 @@ class TocMachine(GraphMachine):
 #######################################################################
     def on_enter_state5(self, update):
         global OX
+        global id_chat
+        global id_message
+        
+        if OX == 1:
+            __main__.bot.edit_message_text(text = 'Quit Game',
+                                chat_id=id_chat,
+                                message_id=id_message)
+        else :
+            update.message.reply_text("Leave OOXX")
         OX = 0
 
-        update.message.reply_text("I'm entering state5")
         self.go_back(update)
 
     def on_exit_state5(self, update):
         print('Leaving state5')
 
 #######################################################################
+    def on_enter_user(self, update):       
+        global id_chat
+        global intro
 
+        #__main__.bot.send_message(chat_id= id_chat,text=intro)
+        print('Entering user')
+
+    def on_exit_user(self, update):
+        print('Leaving user')

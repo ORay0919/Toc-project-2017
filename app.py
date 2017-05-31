@@ -14,10 +14,11 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 API_TOKEN = '375506753:AAGeRZuDa89KhOrWWopmBWk6RE9IS-3nG4g'
-WEBHOOK_URL = 'https://8e591ff1.ngrok.io/hook'
+WEBHOOK_URL = 'https://27b98064.ngrok.io/hook'
 
 app = Flask(__name__)
 bot = telegram.Bot(token=API_TOKEN)
+
 dispatcher = Dispatcher(bot, None, workers=0)
 first = 0
 ooxx_text = 'Error'
@@ -26,7 +27,10 @@ ooxx_id = 0
 machine = TocMachine(
     states=[
         'user',
-        'state1',
+        'bmi',
+        'bmi_height',
+        'bmi_show',
+        'bmi_error',
         'photo',
         'photo_beauty',
         'photo_beauty_candice',
@@ -41,9 +45,39 @@ machine = TocMachine(
     transitions=[
         {
             'trigger': 'advance',
-            'source': 'user',
-            'dest': 'state1',
-            'conditions': 'is_going_to_state1'
+            'source': [
+                'user'
+            ],
+            'dest': 'bmi',
+            'conditions': 'is_going_to_bmi'
+        },
+        {
+            'trigger': 'advance',
+            'source': [
+                'bmi',
+                'bmi_error'
+            ],
+            'dest': 'bmi_height',
+            'conditions': 'is_going_to_bmi_height'
+        },
+        {
+            'trigger': 'advance',
+            'source': [
+                'bmi_height',
+                'bmi_error'
+            ],
+            'dest': 'bmi_show',
+            'conditions': 'is_going_to_bmi_show'
+        },
+        {
+            'trigger': 'advance',
+            'source': [
+                'bmi',
+                'bmi_height',
+                'bmi_error'
+            ],
+            'dest': 'bmi_error',
+            'conditions': 'is_going_to_bmi_error'
         },
         {
             'trigger': 'advance',
@@ -108,14 +142,17 @@ machine = TocMachine(
         },
         {
             'trigger': 'advance',
-            'source': 'state4',
+            'source': [
+                'state4',
+                'ooxx'
+            ],
             'dest': 'state5',
             'conditions': 'is_going_to_state5'
         },
         {
             'trigger': 'go_back',
             'source': [
-                'state1',
+                'bmi_show',
                 'leave_photo',
                 'photo_beauty_candice',
                 'photo_beauty_deer',
@@ -134,6 +171,7 @@ machine = TocMachine(
 
 def _set_webhook():
     status = bot.set_webhook(WEBHOOK_URL)
+
     if not status:
         print('Webhook setup failed')
         sys.exit(1)
@@ -197,7 +235,7 @@ def button(bot, update):
             #update = update.callback_query
 
         elif op == 1 :
-            ooxx_text = "Bot's  turn :"
+            ooxx_text = "Bot's  turn :\n\nType exit to leave the game"
             edit(bot ,query ,reply_markup ,0)
 
             do = fsm.ooxx_AI()
@@ -216,12 +254,12 @@ def button(bot, update):
                 reply_markup = get_keyboard()
                 
                 time.sleep(0.5)
-                ooxx_text = "Your   turn :"
+                ooxx_text = "Your   turn :\n\nType exit to leave the game"
                 edit(bot ,query ,reply_markup ,0)
 
         elif op == 0 :
 
-            ooxx_text =     "The grid has \nbeen filled !\nPlease   pick\na empty grid :"
+            ooxx_text =     "The grid has been filled !\nPlease pick a empty grid !\n\nType exit to leave the game"
             edit(bot ,query ,reply_markup ,0)
 
             time.sleep(0.5)
@@ -235,6 +273,8 @@ dispatcher.add_handler(CallbackQueryHandler(button))
 @app.route('/hook', methods=['POST'])
 def webhook_handler():
     global first
+    global bot
+
     update = telegram.Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     
@@ -245,7 +285,6 @@ def webhook_handler():
     if first == 1 :
         machine.advance(update)
     return 'ok'
-
 
 @app.route('/show-fsm', methods=['GET'])
 def show_fsm():
@@ -258,7 +297,7 @@ def show_fsm():
 if __name__ == "__main__":
     _set_webhook()
     app.run()
-
+    
 
 
 
