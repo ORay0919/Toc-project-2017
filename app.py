@@ -40,7 +40,8 @@ machine = TocMachine(
         'state3',
         'ooxx',
         'state4',
-        'state5'
+        'state5',
+        'hint'
     ],
     transitions=[
         {
@@ -150,6 +151,14 @@ machine = TocMachine(
             'conditions': 'is_going_to_state5'
         },
         {
+            'trigger': 'advance',
+            'source': [
+                'user'
+            ],
+            'dest': 'hint',
+            'conditions': 'is_going_to_hint'
+        },
+        {
             'trigger': 'go_back',
             'source': [
                 'bmi_show',
@@ -158,7 +167,8 @@ machine = TocMachine(
                 'photo_beauty_deer',
                 'photo_hell',
                 'state3',
-                'state5'
+                'state5',
+                'hint'
             ],
             'dest': 'user'
         }

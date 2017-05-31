@@ -13,7 +13,12 @@ bmi_get_height = 0.0
 OX = 0
 id_chat = 0
 id_message = 0
-intro = 'There are four commands so far.\n(1) photo : to get some photo\n(2) ooxx : play tic-tac-toe with bot\n(3) soon\n(4) 3 : don\'t doubt it it\'s 3 but just for test only'
+
+hint_text     =  'Hint :\nThere are four commands .'
+hint_text    +=  '\n(1) photo : Get some photos'
+hint_text    +=  '\n(2) ooxx   : Play tic-tac-toe with bot'
+hint_text    +=  '\n(3) bmi     : Enter your weight and height ,you can know your bmi'
+hint_text    +=  '\n(4) 3          : Don\'t doubt it. It\'s  3  but just for test only😂'
 
 def ooxx_end() :
     global OX
@@ -287,6 +292,9 @@ class TocMachine(GraphMachine):
         elif OX == 2:
             return text.lower() == "n"
 
+    def is_going_to_hint(self, update):
+        return True
+
 #######################################################################
     def on_enter_bmi(self, update):
         global bmi_state
@@ -477,13 +485,20 @@ class TocMachine(GraphMachine):
 
     def on_exit_state5(self, update):
         print('Leaving state5')
+#######################################################################
+    def on_enter_hint(self, update):       
+        global hint_text
+        
+        update.message.reply_text(hint_text)
+        self.go_back(update)
+
+    def on_exit_hint(self, update):
+        print('Leaving hint')
 
 #######################################################################
     def on_enter_user(self, update):       
         global id_chat
-        global intro
 
-        #__main__.bot.send_message(chat_id= id_chat,text=intro)
         print('Entering user')
 
     def on_exit_user(self, update):
