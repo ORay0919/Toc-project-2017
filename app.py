@@ -2,7 +2,9 @@ import sys
 import fsm
 import time
 import telegram
+import requests, json
 
+from lxml import etree, html  
 from io import BytesIO
 
 from flask import Flask, request, send_file
@@ -14,7 +16,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 API_TOKEN = '375506753:AAGeRZuDa89KhOrWWopmBWk6RE9IS-3nG4g'
-WEBHOOK_URL = 'https://27b98064.ngrok.io/hook'
+WEBHOOK_URL = 'https://fc254417.ngrok.io/hook'
 
 app = Flask(__name__)
 bot = telegram.Bot(token=API_TOKEN)
@@ -41,6 +43,7 @@ machine = TocMachine(
         'ooxx',
         'state4',
         'state5',
+        'receipt',
         'hint'
     ],
     transitions=[
@@ -149,14 +152,14 @@ machine = TocMachine(
             ],
             'dest': 'state5',
             'conditions': 'is_going_to_state5'
-        },
+        },  
         {
             'trigger': 'advance',
             'source': [
                 'user'
             ],
-            'dest': 'hint',
-            'conditions': 'is_going_to_hint'
+            'dest': 'receipt',
+            'conditions': 'is_going_to_receipt'
         },
         {
             'trigger': 'go_back',
@@ -168,9 +171,18 @@ machine = TocMachine(
                 'photo_hell',
                 'state3',
                 'state5',
-                'hint'
+                'hint',
+                'receipt'
             ],
             'dest': 'user'
+        },
+        {
+            'trigger': 'advance',
+            'source': [
+                'user'
+            ],
+            'dest': 'hint',
+            'conditions': 'is_going_to_hint'
         }
     ],
     initial='user',

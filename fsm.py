@@ -1,25 +1,89 @@
+# -*- coding: utf8 -*-
 import time
 import __main__
 import random
-
+import requests, json
+import datetime
+from lxml import etree, html  
 from transitions.extensions import GraphMachine
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import  CommandHandler, CallbackQueryHandler
  
 puzzle  = [['_' for x in range(3)] for y in range(3)] 
+
 bmi_state = 0
 bmi_get_weight = 0.0
 bmi_get_height = 0.0
+
 root = 1
 OX = 0
 id_chat = 0
 id_message = 0
 
-hint_text     =  'Hint :\nThere are four commands .'
-hint_text    +=  '\n(1) photo : Get some photos'
-hint_text    +=  '\n(2) ooxx   : Play tic-tac-toe with bot'
-hint_text    +=  '\n(3) bmi     : Enter your weight and height ,you can know your bmi'
-hint_text    +=  '\n(4) 3          : Don\'t doubt it. It\'s  3  but just for test only😂'
+hint_text     =  'Hint :\nThere are five commands so far.'
+hint_text    +=  '\n(1) photo  : Get some photos'
+hint_text    +=  '\n(2) ooxx    : Play tic-tac-toe with bot'
+hint_text    +=  '\n(3) bmi      : Enter your weight and height ,you can know your bmi'
+hint_text    +=  '\n(4) receipt : Get the last 3 times of receipt lottery numbers'
+hint_text    +=  '\n(5) 3           : Don\'t doubt it. It\'s  3  but just for test only😂'
+
+def get_next_month(y ,m) :
+    r = []
+    if m == 1 :
+        y -= 1
+        m  = 11
+    else :
+        m -= 2
+    r.append(y)
+    r.append(m)
+    return r
+
+def get_receipt_number(y ,m):
+    
+    text = str(y-1911)
+    
+    if m < 10 :
+        text += '0'+str(m)
+    else :
+        text += str(m)
+    result = requests.get("https://www.etax.nat.gov.tw/etw-main/web/ETW183W2_%s/"%text) 
+    
+    result.encoding = 'utf8'  
+    root = etree.fromstring(result.content, etree.HTMLParser()) 
+    i = []
+    for row in root.xpath("//table[@class='table table-bordered']/tbody[position()>1]")  :
+        column = row.xpath("./tr/td/span/text()")
+        if len(column) > 0:
+            for g in column:
+                i.append(g)
+    return i
+
+def make_receipt_text(y ,m ,i) :
+    
+    text = "%s年"%str(y-1911)
+    
+    if m < 10 :
+        text += "0%d ~ "%m
+    else :
+        text += "%d ~ "%m
+    m += 1
+    if m < 10 :
+        text += "0%d月\n\n"%m
+    else :
+        text += "%d月\n\n"%m
+
+    k=[  "特別獎     : " 
+        ,"特獎         : " 
+        ,"頭獎         : " 
+        ,"增開六獎 : "
+    ]
+
+    for x in range(0 ,4):
+        text += k[x]
+        text += i[x]
+        text += "\n"
+
+    return text
 
 def ooxx_end() :
     global OX
@@ -293,11 +357,20 @@ class TocMachine(GraphMachine):
         elif OX == 2:
             return text.lower() == "n"
 
+    def is_going_to_receipt(self, update):
+
+        if hasattr(update.message ,'text'):
+            text = update.message.text
+        else:
+            return False
+
+        return text.lower() == "receipt"
+
     def is_going_to_hint(self, update):
         global root
         if root == 1:
             return True
-
+    
 #######################################################################
     def on_enter_bmi(self, update):
         global bmi_state
@@ -507,6 +580,45 @@ class TocMachine(GraphMachine):
 
     def on_exit_hint(self, update):
         print('Leaving hint')
+
+#######################################################################
+    def on_enter_receipt(self, update):       
+        now = datetime.datetime.now()
+        
+        year  = now.year
+        month = now.month
+        day   = now.day
+        ran = 3
+
+        if month%2 == 0:
+            month-=1
+            
+        elif  day < 25:
+            tmp = get_next_month(year ,month)
+            year = tmp[0]
+            month = tmp[1]
+
+        y=[]
+        m=[]
+        for x in range(0 ,ran) :
+            tmp = get_next_month(year ,month)
+            year = tmp[0]
+            month = tmp[1]
+            y.append(year)
+            m.append(month)
+
+        text=""
+        for x in range(0 ,ran) :
+            i = get_receipt_number(y[x] ,m[x])
+            text += make_receipt_text(y[x] ,m[x] ,i)
+            text += "\n\n"
+            
+        update.message.reply_text(text)
+        self.go_back(update)
+
+    def on_exit_receipt(self, update):
+        print('Leaving receipt')
+
 
 #######################################################################
     def on_enter_user(self, update):       
