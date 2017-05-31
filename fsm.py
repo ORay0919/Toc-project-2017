@@ -10,6 +10,7 @@ puzzle  = [['_' for x in range(3)] for y in range(3)]
 bmi_state = 0
 bmi_get_weight = 0.0
 bmi_get_height = 0.0
+root = 1
 OX = 0
 id_chat = 0
 id_message = 0
@@ -293,11 +294,15 @@ class TocMachine(GraphMachine):
             return text.lower() == "n"
 
     def is_going_to_hint(self, update):
-        return True
+        global root
+        if root == 1:
+            return True
 
 #######################################################################
     def on_enter_bmi(self, update):
         global bmi_state
+        global root
+        root = 0
         update.message.reply_text("Please give me your \" Weight \" in kilograms ")
         bmi_state = 1;
         #self.go_back(update)
@@ -320,6 +325,7 @@ class TocMachine(GraphMachine):
         global bmi_state
         global bmi_get_height
         global bmi_get_weight
+
         b = bmi_get_weight / ((bmi_get_height/100)**2)
         
         if b < 16.5 or b > 31.5 :
@@ -364,7 +370,9 @@ class TocMachine(GraphMachine):
 
 #######################################################################
     def on_enter_photo(self, update):
-        
+        global root
+        root = 0
+
         update.message.reply_text("Which kind of photo do you want?\nPlease type the number :\n1 : Beauty\n2 : 通往地獄的大門\n3 : Leave photo")
 
     def on_exit_photo(self, update):
@@ -435,7 +443,11 @@ class TocMachine(GraphMachine):
     def on_enter_ooxx(self, update):
         global puzzle
         global OX 
-        
+        global id_message
+
+        global root
+        root = 0
+
         if OX != 1:
             OX = 1
             puzzle  = [['_' for x in range(3)] for y in range(3)] 
@@ -450,7 +462,8 @@ class TocMachine(GraphMachine):
                 keyboard.append(new)  
             
             reply_markup = InlineKeyboardMarkup(keyboard)
-            __main__.bot.send_message(chat_id= id_chat,text='You go first:\n\nType exit to leave the game', reply_markup=reply_markup)
+            
+            id_message = __main__.bot.send_message(chat_id= id_chat,text='You go first:\n\nType exit to leave the game', reply_markup=reply_markup).message_id
             #self.go_back(update)
 
     def on_exit_ooxx(self, update):
@@ -497,8 +510,9 @@ class TocMachine(GraphMachine):
 
 #######################################################################
     def on_enter_user(self, update):       
-        global id_chat
-
+        global root
+        root = 1
+        
         print('Entering user')
 
     def on_exit_user(self, update):
